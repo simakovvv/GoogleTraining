@@ -1,9 +1,13 @@
 package com.certification.tiptime
 
+import android.content.Context
 import android.icu.text.NumberFormat
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.KeyEvent
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.annotation.RequiresApi
 import com.certification.tiptime.databinding.ActivityMainBinding
 
@@ -18,11 +22,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.calculateButton.setOnClickListener { calculateTip() }
+        binding.costOfServiceEditText.setOnKeyListener { view, keyCode, _ -> handleKeyEvent(view, keyCode)}
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     private fun calculateTip() {
-        val stringInTextField = binding.costOfService.text.toString()
+        val stringInTextField = binding.costOfServiceEditText.text.toString()
         val cost = stringInTextField.toDoubleOrNull()
         if (cost == null) {
             binding.tipResult.text = ""
@@ -40,7 +44,22 @@ class MainActivity : AppCompatActivity() {
             tip = kotlin.math.ceil(tip)
         }
 
-        val formattedTip = NumberFormat.getCurrencyInstance().format(tip)
+        val formattedTip = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            NumberFormat.getCurrencyInstance().format(tip)
+        } else {
+            TODO("VERSION.SDK_INT < N")
+        }
         binding.tipResult.text = getString(R.string.tip_amount, formattedTip)
+    }
+
+    private fun handleKeyEvent(view: View, keyCode: Int): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_ENTER) {
+            // Hide the keyboard
+            val inputMethodManager =
+                getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+            return true
+        }
+        return false
     }
 }
